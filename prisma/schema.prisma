@@ -13,5 +13,5 @@ datasource db {
 model post {
   id       String    @id @default(auto()) @map("_id") @db.ObjectId
   title    String
-  body     String
+  body     String   
 }
