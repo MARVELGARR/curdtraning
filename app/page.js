@@ -128,7 +128,7 @@ export default function Home(){
       setTitle(postToEdit.title);
       setBody(postToEdit.body);
       setEditMode(true);
-      setEditModePostId(id);
+      setEditPostId(id);
     }
   };
 
