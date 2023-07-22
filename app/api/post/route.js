@@ -6,7 +6,7 @@ export async function POST(req){
 
     try{
         const content = await req.json();
-        const { title, body} = content;
+        const { title, body } = content;
         const newPost = await prisma.post.create({
             data: {
                 title,

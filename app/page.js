@@ -1,11 +1,14 @@
 "use client";
+import { headers } from '@/next.config';
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 
-export default function Home() {
+export default function Home(){
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
   const [post, setPost] = useState([])
+  const [editMode, setEditMode] = useState(false);
+  const [editPostId, setEditPostId] = useState(null);
 
   const handleTitle =(e)=>{
     const value = e.target.value;
@@ -85,13 +88,49 @@ export default function Home() {
         console.log(res, "was deleted successfully", post.statusText)
       }
       else{
-        console.error("Failed to delete post", s)
+        console.error("Failed to delete post", )
       }
     }
     catch(error){
       console.error("error deleting post", error)
     }
   }
+
+  const updatePost  = async (id) =>{
+    try{
+      const updatedPost = await fetch(`/api/post/${id}`,{
+        method: "PATCH",
+        headers:{
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({title, body})
+      })
+      if(updatedPost.ok){
+        setEditMode(false);
+        setEditPostId(null);
+        getPost();
+        console.log('Post updated successfully', updatedPost.statusText);
+      }
+      else{
+        console.error('Failed to update post', updatedPost.status, updatedPost.statusText);
+      }
+    }
+    catch(error){
+      console.error('Error updating post', error);
+    }
+  }
+
+  const editPost = (id) => {
+    if (editMode && editPostId === id) {
+      updatePost(id);
+    } else {
+      const postToEdit = post.find((item) => item.id === id);
+      setTitle(postToEdit.title);
+      setBody(postToEdit.body);
+      setEditMode(true);
+      setEditModePostId(id);
+    }
+  };
 
 
   return (
@@ -105,20 +144,46 @@ export default function Home() {
         </fieldset>
         <button className="p-2 rounded-xl bg-black text-white" type="submit">submit</button>
       </form>
-      <div className="flex gap-4">
-        {post.map((item) =>{
-          return(
-            <div className='border-2 shadow-sm shadow-slate-400 p-2 h-44 w-44' key={item.id}>
-              <div className="bg-pink-400/50"><span className=" text-base font-bold">title: </span>{item.title}</div>
-              <div className=''><span className=" text-base font-bold">body: </span>{item.body}</div>
-              <div className='absolute bottom-0 flex justify-between w-full'>
-                <button onClick={()=>deletePost(item.id)} className=' p-1 bg-black text-white rounded-lg '>DELET</button>
-                <button className=' p-1 bg-black text-white rounded-lg'>EDIT</button>
+      <div className=''>
+        {editMode ? (
+            <button className="p-2 rounded-xl bg-green-500 text-white" type="button" onClick={() => updatePost(editPostId)}>
+              Save
+            </button>
+          ) : (
+            <button className="p-2 rounded-xl bg-black text-white" type="submit">
+              Submit
+            </button>
+          )}
+        </div>
+        <div className="flex gap-4">
+          {post.map((item) => (
+            <div className="border-2 relative shadow-sm shadow-slate-400 p-2 h-44 w-44" key={item.id}>
+              <div className="bg-pink-400/50">
+                <span className="text-base font-bold">title: </span>
+                {item.title}
+              </div>
+              {editMode && editPostId === item.id ? (
+                <textarea className="border-2 rounded-xl" value={body} onChange={handleBody} placeholder="body..."></textarea>
+              ) : (
+                <div className="">
+                  <span className="text-base font-bold">body: </span>
+                  {item.body}
+                </div>
+              )}
+              <div className="absolute bottom-0 flex justify-between items-center w-full">
+                <button onClick={() => deletePost(item.id)} className="p-1 bg-red-500 text-white rounded-lg">
+                  DELETE
+                </button>
+                {!editMode || (editMode && editPostId !== item.id) ? (
+                  <button onClick={() => editPost(item.id)} className="p-1 bg-blue-500 text-white rounded-lg mr-5">
+                    EDIT
+                  </button>
+                ) : null}
               </div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      
     </main>
   )
 }
